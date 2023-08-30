@@ -1,5 +1,7 @@
 # script to train CNN with opensoundscape package
 
+# script to train CNN with opensoundscape package
+
 import opensoundscape
 import glob
 import os
@@ -13,14 +15,13 @@ import random
 from  apply_transfer_function import TransferFunction
 from convert_audio_to_bits import convert_audio_to_bits
 
-print(torch.__version__)
+# print(torch.__version__)
 
 # read in train and validation dataframes
 train_clips = pd.read_csv('/home/michaela/CV4E_oss/pre_processing/labeled_data/train_clips.csv', index_col=[0,1,2]) 
 validate_clips = pd.read_csv('/home/michaela/CV4E_oss/pre_processing/labeled_data/validate_clips.csv', index_col=[0,1,2])
 print(train_clips.sum())
 print(validate_clips.sum())
-
 
 calls_of_interest = ["D", "A NE Pacific", "B NE Pacific"] #define the calls for CNN
 model = opensoundscape.CNN('resnet18',classes=calls_of_interest,sample_duration=15.0, single_target=False) # create a CNN object designed to recognize 15-second samples
@@ -41,6 +42,9 @@ model.preprocessor.pipeline.frequency_mask.bypass=True
 model.preprocessor.pipeline.random_trim_audio.bypass=True
 model.preprocessor.pipeline.random_affine.bypass=True
 model.preprocessor.out_shape = [224,448,3] # resize image the size that I want ? might not work with pre-trained weights ?
+model.optimizer_params['lr']=0.005 # learning rate (pretty low but not too low) decreases by 
+model.lr_cooling_factor = 0.3 # decrease learning rate by multiplying 0.005*0.3 every ten epochs
+model.wandb_logging['n_preview_samples']=20 # number of samples that I want to look at 
 
 model.preprocessor.insert_action(
     action_index='convert_to_bits', #give it a name
@@ -55,7 +59,7 @@ model.preprocessor.insert_action(
 wandb_session = wandb.init( #initialize wandb logging 
         entity='BigBlueWhale', #replace with your entity/group name
         project='opensoundscape training BigBlueWhale',
-        name='Trial 03: train balanced w/negs')
+        name='Trial 03: train balanced w/negs. 2000 val samples')
 
 model.train(
     train_clips, 
