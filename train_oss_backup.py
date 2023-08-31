@@ -1,7 +1,5 @@
 # script to train CNN with opensoundscape package
 
-# script to train CNN with opensoundscape package
-
 import opensoundscape
 import glob
 import os
@@ -36,15 +34,15 @@ model.preprocessor.pipeline.to_spec.params.decibel_limits = (-200,200) # oss pre
 model.preprocessor.pipeline.to_spec.params.scaling = 'density'
 model.preprocessor.pipeline.bandpass.params.min_f = 10
 model.preprocessor.pipeline.bandpass.params.max_f = 150
-model.preprocessor.pipeline.add_noise.bypass=True
-model.preprocessor.pipeline.time_mask.bypass=True
-model.preprocessor.pipeline.frequency_mask.bypass=True
-model.preprocessor.pipeline.random_trim_audio.bypass=True
+#model.preprocessor.pipeline.add_noise.bypass=True
+model.preprocessor.pipeline.frequency_mask.set(max_width = 0.1, max_masks=10)
+model.preprocessor.pipeline.time_mask.set(max_width = 0.1, max_masks=10)
+model.preprocessor.pipeline.add_noise.set(std=0.1)
 model.preprocessor.pipeline.random_affine.bypass=True
 model.preprocessor.out_shape = [224,448,3] # resize image the size that I want ? might not work with pre-trained weights ?
-model.optimizer_params['lr']=0.005 # learning rate (pretty low but not too low) decreases by 
+model.optimizer_params['lr']=0.001 # learning rate (pretty low but not too low) 
 model.lr_cooling_factor = 0.3 # decrease learning rate by multiplying 0.005*0.3 every ten epochs
-model.wandb_logging['n_preview_samples']=20 # number of samples that I want to look at 
+model.wandb_logging['n_preview_samples']=100 # number of samples that I want to look at 
 
 model.preprocessor.insert_action(
     action_index='convert_to_bits', #give it a name
@@ -59,7 +57,7 @@ model.preprocessor.insert_action(
 wandb_session = wandb.init( #initialize wandb logging 
         entity='BigBlueWhale', #replace with your entity/group name
         project='opensoundscape training BigBlueWhale',
-        name='Trial 03: train balanced w/negs. 2000 val samples')
+        name='Trial 06: add time/freq/noise augmentations')
 
 model.train(
     train_clips, 
