@@ -25,6 +25,7 @@ class TransferFunction(BaseAction):
         tf_dict = {'DCPP01A': '688_130415_B_HARP_DCPP01A.tf', # transfer function keys 
                     'DCPP02A': '686_121005_B_HARP_DCPP02A.tf',
                     'CINMS18B': '618_101105_B_HARP_CINMS18B.tf'}
+        
         tf_dataframe_dict = {}
 
         for file in tf_dict.keys():

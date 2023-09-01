@@ -16,7 +16,7 @@ from convert_audio_to_bits import convert_audio_to_bits
 # print(torch.__version__)
 
 # read in train and validation dataframes
-train_clips = pd.read_csv('/home/michaela/CV4E_oss/pre_processing/labeled_data/train_clips.csv', index_col=[0,1,2]) 
+train_clips = pd.read_csv('/home/michaela/CV4E/labeled_data/train_balanced_1500.csv', index_col=[0,1,2]) 
 validate_clips = pd.read_csv('/home/michaela/CV4E_oss/pre_processing/labeled_data/validate_clips.csv', index_col=[0,1,2])
 print(train_clips.sum())
 print(validate_clips.sum())
@@ -35,13 +35,16 @@ model.preprocessor.pipeline.to_spec.params.scaling = 'density'
 model.preprocessor.pipeline.bandpass.params.min_f = 10
 model.preprocessor.pipeline.bandpass.params.max_f = 150
 #model.preprocessor.pipeline.add_noise.bypass=True
-model.preprocessor.pipeline.frequency_mask.set(max_width = 0.1, max_masks=10)
+model.preprocessor.pipeline.frequency_mask.set(max_width = 0.03, max_masks=10)
 model.preprocessor.pipeline.time_mask.set(max_width = 0.1, max_masks=10)
-model.preprocessor.pipeline.add_noise.set(std=0.1)
+model.preprocessor.pipeline.add_noise.set(std=0.2)
 model.preprocessor.pipeline.random_affine.bypass=True
-model.preprocessor.out_shape = [224,448,3] # resize image the size that I want ? might not work with pre-trained weights ?
+# model.preprocessor.out_shape = [224,448,3] # resize image the size that I want ? might not work with pre-trained weights ?
+model.preprocessor.height = 224
+model.preprocessor.width = 448
+model.preprocessor.channels = 3
 model.optimizer_params['lr']=0.001 # learning rate (pretty low but not too low) 
-model.lr_cooling_factor = 0.3 # decrease learning rate by multiplying 0.005*0.3 every ten epochs
+model.lr_cooling_factor = 0.3 # decrease learning rate by multiplying 0.001*0.3 every ten epochs
 model.wandb_logging['n_preview_samples']=100 # number of samples that I want to look at 
 
 model.preprocessor.insert_action(
@@ -57,16 +60,16 @@ model.preprocessor.insert_action(
 wandb_session = wandb.init( #initialize wandb logging 
         entity='BigBlueWhale', #replace with your entity/group name
         project='opensoundscape training BigBlueWhale',
-        name='Trial 06: add time/freq/noise augmentations')
+        name='Trial 10: balanced noise, with augmentation')
 
 model.train(
     train_clips, 
     validate_clips, 
-    epochs = 30, 
+    epochs = 10, 
     batch_size= 128, 
     log_interval=1, #log progress every 1 batches
     num_workers = 16, #16 parallelized cpu tasks for preprocessing
     wandb_session=wandb_session,
     save_interval = 1, #save checkpoint every 1 epoch
-    save_path = '/home/michaela/CV4E_oss/train/model_states/' #location to save checkpoints (epochs)
+    save_path = '/home/michaela/CV4E/model_states/' #location to save checkpoints (epochs)
 )
